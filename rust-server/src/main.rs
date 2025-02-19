@@ -15,6 +15,7 @@ fn main() {
     server.set_nonblocking(true).expect("failed to initialize non-blocking");
 
     let mut clients = vec![];
+
     let (tx, rx) = mpsc::channel::<String>();
     loop {
         if let Ok((mut socket, addr)) = server.accept() {
@@ -22,6 +23,8 @@ fn main() {
 
             let tx = tx.clone();
             clients.push(socket.try_clone().expect("failed to clone client"));
+
+			let mut username = String::new();
 
             thread::spawn(move || loop {
                 let mut buff = vec![0; MSG_SIZE];
@@ -31,8 +34,15 @@ fn main() {
                         let msg = buff.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
                         let msg = String::from_utf8(msg).expect("Invalid utf8 message");
 
-                        println!("{}: {:?}", addr, msg);
-                        tx.send(msg).expect("failed to send msg to rx");
+						if msg.contains("user:") {
+							// user:USERNAME messages tell the server to store the client's username.
+							username = msg.strip_prefix("user:").unwrap().trim().to_string();
+							println!("{} is user {:?}", addr, username);
+						} else {
+							let message_with_sender: String = format!("{username}: {msg}");
+							println!("{}", message_with_sender);
+							tx.send(message_with_sender).expect("failed to send msg to rx");
+						}
                     }, 
                     Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
                     Err(_) => {
