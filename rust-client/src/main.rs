@@ -11,7 +11,7 @@ fn main() {
 	let mut username = String::new();
 	print!("Enter a username:");
 	// stdout is usually line-buffered, makes sure the print macro above shows BEFORE inputting username.
-	io::stdout().flush();
+	let _ = io::stdout().flush();
     io::stdin().read_line(&mut username).expect("reading from stdin failed");
 
     let mut client = TcpStream::connect(LOCAL).expect("Stream failed to connect");
