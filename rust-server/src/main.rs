@@ -7,13 +7,15 @@ const LOCAL: &str = "127.0.0.1:6000";
 const MSG_SIZE: usize = 32;
 
 fn sleep() {
+	// Used to break up thread/server loops so they aren't constantly running.
     thread::sleep(::std::time::Duration::from_millis(100));
 }
 
 fn main() {
     let server = TcpListener::bind(LOCAL).expect("Listener failed to bind");
+	// Allows the server to continually check for client messages.
     server.set_nonblocking(true).expect("failed to initialize non-blocking");
-
+	// Vector of TcpStream connections to the server.
     let mut clients = vec![];
 
     let (tx, rx) = mpsc::channel::<String>();
@@ -40,11 +42,14 @@ fn main() {
             let tx = tx.clone();
             clients.push(socket.try_clone().expect("failed to clone client"));
 
+			// Tracks the client's username.
 			let mut username = String::new();
 
+			// Spawns a separate thread for each client to listen for messages.
             thread::spawn(move || loop {
                 let mut buff = vec![0; MSG_SIZE];
 
+				// Reads messages from client if one was sent. Ends thread loop if unable to reach client.
                 match socket.read_exact(&mut buff) {
                     Ok(_) => {
                         let msg = buff.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
@@ -55,6 +60,7 @@ fn main() {
 							username = msg.strip_prefix("user:").unwrap().trim().to_string();
 							println!("{} is user {:?}", addr, username);
 						} else {
+							// Print client message and who sent it.
 							let message_with_sender: String = format!("{username}: {msg}");
 							println!("{}", message_with_sender);
 							tx.send(message_with_sender).expect("failed to send msg to rx");
@@ -72,7 +78,7 @@ fn main() {
         }
 		
 		let mut shutdown_server:bool = false;
-		// If the user inputs ':quit', exits the server loop.
+		// If the user inputs ':quit', exits the server loop. Otherwise, sends msg to all clients.
         if let Ok(msg) = rx.try_recv() {
 			if msg == ":quit" {
 				shutdown_server = true;
