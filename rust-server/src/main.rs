@@ -25,7 +25,12 @@ fn main() {
         let mut buff = String::new();
         io::stdin().read_line(&mut buff).expect("reading from stdin failed");
         let msg = buff.trim().to_string();
-        if msg == ":quit" || io_tx.send(msg).is_err() {break}
+		// io_tx.send takes ownership of msg, so "if msg == :quit" is invalid after it.
+		// I declare quitting to track whether the user sent ":quit" before msg is moved.
+		let quitting:bool = if msg == ":quit" { true } else { false };
+        if io_tx.send(msg).is_err() || quitting {
+			break
+		}
 	});
 
     loop {
@@ -65,16 +70,24 @@ fn main() {
                 sleep();
             });
         }
-
+		
+		let mut shutdown_server:bool = false;
+		// If the user inputs ':quit', exits the server loop.
         if let Ok(msg) = rx.try_recv() {
-            clients = clients.into_iter().filter_map(|mut client| {
-                let mut buff = msg.clone().into_bytes();
-                buff.resize(MSG_SIZE, 0);
+			if msg == ":quit" {
+				shutdown_server = true;
+			} else {
+				clients = clients.into_iter().filter_map(|mut client| {
+					let mut buff = msg.clone().into_bytes();
+					buff.resize(MSG_SIZE, 0);
 
-                client.write_all(&buff).map(|_| client).ok()
-            }).collect::<Vec<_>>();
+					client.write_all(&buff).map(|_| client).ok()
+				}).collect::<Vec<_>>();
+			}
         }
-
+		if shutdown_server { break }
         sleep();
     }
+
+	println!("Shutdown server.");
 }
