@@ -8,10 +8,19 @@ const LOCAL: &str = "127.0.0.1:6000";
 const MSG_SIZE: usize = 32;
 
 fn main() {
+	let mut username = String::new();
+	print!("Enter a username:");
+	// stdout is usually line-buffered, makes sure the print macro above shows BEFORE inputting username.
+	io::stdout().flush();
+    io::stdin().read_line(&mut username).expect("reading from stdin failed");
+
     let mut client = TcpStream::connect(LOCAL).expect("Stream failed to connect");
     client.set_nonblocking(true).expect("failed to initiate non-blocking");
 
     let (tx, rx) = mpsc::channel::<String>();
+
+	// TODO: revisit unwrap, not sure if there's a better thing to do for error handling here.
+	tx.send(format!("user:{username}")).unwrap();
 
     thread::spawn(move || loop {
         let mut buff = vec![0; MSG_SIZE];
