@@ -1,4 +1,4 @@
-use std::io::{ErrorKind, Read, Write};
+use std::io::{self, ErrorKind, Read, Write};
 use std::net::TcpListener;
 use std::sync::mpsc;
 use std::thread;
@@ -17,6 +17,17 @@ fn main() {
     let mut clients = vec![];
 
     let (tx, rx) = mpsc::channel::<String>();
+
+	// The server spawns a separate thread to handle IO, allowing it to read user messages.
+	// Unless the user specifies the server should quit (:quit), it sends the message out to all clients.
+	let io_tx = tx.clone();
+	thread::spawn(move || loop {
+        let mut buff = String::new();
+        io::stdin().read_line(&mut buff).expect("reading from stdin failed");
+        let msg = buff.trim().to_string();
+        if msg == ":quit" || io_tx.send(msg).is_err() {break}
+	});
+
     loop {
         if let Ok((mut socket, addr)) = server.accept() {
             println!("Client {} connected", addr);
