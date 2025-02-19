@@ -20,7 +20,7 @@ fn main() {
     let (tx, rx) = mpsc::channel::<String>();
 
     // TODO: revisit unwrap, not sure if there's a better thing to do for error handling here.
-    tx.send(format!("user:{username}")).unwrap();
+    tx.send(format!(":user {username}")).unwrap();
 
     thread::spawn(move || loop {
         let mut buff = vec![0; MSG_SIZE];
@@ -42,7 +42,7 @@ fn main() {
                 let mut buff = msg.clone().into_bytes();
                 buff.resize(MSG_SIZE, 0);
                 client.write_all(&buff).expect("writing to socket failed");
-                if !msg.contains("user:") {
+                if !msg.contains(":user ") {
                     println!("message sent {:?}", msg);
                 }
             }, 

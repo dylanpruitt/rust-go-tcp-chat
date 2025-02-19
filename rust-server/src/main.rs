@@ -55,9 +55,9 @@ fn main() {
                         let msg = buff.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
                         let msg = String::from_utf8(msg).expect("Invalid utf8 message");
 
-                        if msg.contains("user:") {
-                            // user:USERNAME messages tell the server to store the client's username.
-                            username = msg.strip_prefix("user:").unwrap().trim().to_string();
+                        if msg.contains(":user ") {
+                            // :user USERNAME messages tell the server to store the client's username.
+                            username = msg.strip_prefix(":user ").unwrap().trim().to_string();
                             println!("{} is user {:?}", addr, username);
                         } else {
                             // Print client message and who sent it.
