@@ -17,8 +17,9 @@ fn main() {
         let mut buff = vec![0; MSG_SIZE];
         match client.read_exact(&mut buff) {
             Ok(_) => {
-                let msg = buff.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
-                println!("message recv {:?}", msg);
+                let msg_bytes: Vec<u8> = buff.into_iter().take_while(|&x| x != 0).collect();
+				let msg_str: String = String::from_utf8(msg_bytes).expect("message should contain valid utf8 bytes");
+                println!("message recv {:?}", msg_str);
             },
             Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
             Err(_) => {
