@@ -42,7 +42,9 @@ fn main() {
                 let mut buff = msg.clone().into_bytes();
                 buff.resize(MSG_SIZE, 0);
                 client.write_all(&buff).expect("writing to socket failed");
-                println!("message sent {:?}", msg);
+				if !msg.contains("user:") {
+					println!("message sent {:?}", msg);
+				}
             }, 
             Err(TryRecvError::Empty) => (),
             Err(TryRecvError::Disconnected) => break
@@ -58,8 +60,7 @@ fn main() {
         let msg = buff.trim().to_string();
         if msg == ":quit" || tx.send(msg).is_err() {break}
     }
-    println!("bye bye!");
-
+    println!("Disconnected from server.");
 }
 
 // To run this program you need to open 2 terminals. One for the client and one for the server. 
