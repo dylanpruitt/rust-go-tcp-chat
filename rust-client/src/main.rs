@@ -41,9 +41,23 @@ fn main() {
             Ok(msg) => {
                 let mut buff = msg.clone().into_bytes();
                 buff.resize(MSG_SIZE, 0);
+                if msg.contains(":user") {
+                    // Client will not send whitespace/empty usernames to the server.
+                    let username: String = msg.strip_prefix(":user").unwrap().trim().to_string();
+                    // Displays help message if :user command is used incorrectly.
+                    if username.len() == 0 {
+                        println!("INVALID USE OF :user COMMAND");
+                        println!("Type ':user [USERNAME]' to set your username (ex. ':user Ringo')");
+                        continue
+                    }
+                }
+                
                 client.write_all(&buff).expect("writing to socket failed");
                 if !msg.contains(":user ") {
                     println!("message sent {:?}", msg);
+                } else {
+                    let username: String = msg.strip_prefix(":user").unwrap().trim().to_string();
+                    println!("setting username as {}", username);
                 }
             }, 
             Err(TryRecvError::Empty) => (),
@@ -62,9 +76,3 @@ fn main() {
     }
     println!("Disconnected from server.");
 }
-
-// To run this program you need to open 2 terminals. One for the client and one for the server. 
-// In the server run `cargo run`. 
-// Then do the same in your client. And this time you should see a message, `write a message`. 
-// Type something and then you should see that in the server. 
-// If you type ':quit' then the program will quit...
