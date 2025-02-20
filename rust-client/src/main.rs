@@ -39,6 +39,15 @@ fn main() {
 
         match rx.try_recv() {
             Ok(msg) => {
+                // If client inputs :help, print help message and do not send to the server.
+                if msg.contains(":help") {
+                    println!("Chat App Commands:");
+                    println!(":help - display this message");
+                    println!(":user [USER] - change username");
+                    println!(":quit - disconnect from server");
+                    continue;
+                }
+                
                 let mut buff = msg.clone().into_bytes();
                 buff.resize(MSG_SIZE, 0);
                 if msg.contains(":user") {
