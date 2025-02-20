@@ -4,7 +4,7 @@ use std::sync::mpsc;
 use std::thread;
 
 const LOCAL: &str = "127.0.0.1:6000";
-const MSG_SIZE: usize = 32;
+const MSG_SIZE: usize = 64;
 
 fn sleep() {
     // Used to break up thread/server loops so they aren't constantly running.
@@ -57,8 +57,14 @@ fn main() {
 
                         if msg.contains(":user ") {
                             // :user USERNAME messages tell the server to store the client's username.
+                            let old_username: String = username.clone();
                             username = msg.strip_prefix(":user ").unwrap().trim().to_string();
                             println!("{} is user {:?}", addr, username);
+                            if old_username != "" {
+                                // If not the client initially setting their username, send a message with updated username.
+                                let username_change_message: String = format!("{old_username} changed username to {username}");
+                                tx.send(username_change_message).expect("failed to send msg to rx");
+                            }
                         } else {
                             // Print client message and who sent it.
                             let message_with_sender: String = format!("{username}: {msg}");
