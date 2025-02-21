@@ -31,7 +31,8 @@ fn main() {
                 let msg_str: String = String::from_utf8(msg_bytes).expect("message should contain valid utf8 bytes");
                 // To avoid printing messages again after sending, only displays messages if they aren't from this client.
                 let username_prefix: String = format!("{username}:");
-                if !msg_str.starts_with(&username_prefix) {
+                let user_joined_message: String = format!("{username} joined the server.");
+                if !msg_str.starts_with(&username_prefix) && msg_str != user_joined_message {
                     println!("{}", msg_str);
                 }
             },

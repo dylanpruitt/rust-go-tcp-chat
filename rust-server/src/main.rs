@@ -64,6 +64,10 @@ fn main() {
                                 // If not the client initially setting their username, send a message with updated username.
                                 let username_change_message: String = format!("{old_username} changed username to {username}");
                                 tx.send(username_change_message).expect("failed to send msg to rx");
+                            } else {
+                                // Sends a message for client initially connecting.
+                                let welcome_message: String = format!("{username} joined the server.");
+                                tx.send(welcome_message).expect("failed to send msg to rx");
                             }
                         } else {
                             // Print client message and who sent it.
