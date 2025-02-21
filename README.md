@@ -1,6 +1,7 @@
 
 # Simple TCP Chat Server/Client
 
+**Note: this is still a work in progress, the Rust side is done but I haven't touched Go yet.**
 I've gone through the official tutorials for both Rust and Go, but wanted to work on a project to have hands-on experience with both. I thought making a simple chat app with both languages would be a great way to compare the two.
 
 This repo builds off of two similar existing repos:  
@@ -20,4 +21,6 @@ Gets client username from stdin, and starts a nonblocking connection to the serv
 - `:user [NEW_USERNAME]` (**client**): sets client username to `[NEW_USERNAME]`.
 - `:quit` (**client/server**): terminates client/server connection and exits the application.
 
-**Note: this is still a work in progress, the Rust side is mostly done but I haven't touched Go yet.**
+### Run Instructions
+
+To run the Rust client/server, open two terminals: one in `rust-client/` and one in `rust-server/`. Start the client and server by running `cargo run` in each terminal.
