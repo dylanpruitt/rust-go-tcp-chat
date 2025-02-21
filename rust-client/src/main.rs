@@ -13,6 +13,7 @@ fn main() {
     // stdout is usually line-buffered, makes sure the print macro above shows BEFORE inputting username.
     let _ = io::stdout().flush();
     io::stdin().read_line(&mut username).expect("reading from stdin failed");
+    username = username.trim().to_string();
 
     let mut client = TcpStream::connect(LOCAL).expect("Stream failed to connect");
     client.set_nonblocking(true).expect("failed to initiate non-blocking");
@@ -28,7 +29,11 @@ fn main() {
             Ok(_) => {
                 let msg_bytes: Vec<u8> = buff.into_iter().take_while(|&x| x != 0).collect();
                 let msg_str: String = String::from_utf8(msg_bytes).expect("message should contain valid utf8 bytes");
-                println!("message recv {:?}", msg_str);
+                // To avoid printing messages again after sending, only displays messages if they aren't from this client.
+                let username_prefix: String = format!("{username}:");
+                if !msg_str.starts_with(&username_prefix) {
+                    println!("message recv {:?}", msg_str);
+                }
             },
             Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
             Err(_) => {
