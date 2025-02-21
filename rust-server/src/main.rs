@@ -75,6 +75,8 @@ fn main() {
                     Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
                     Err(_) => {
                         println!("closing connection with {} ({})", username, addr);
+                        let client_leaving_message: String = format!("{username} disconnected.");
+                        tx.send(client_leaving_message).expect("failed to send msg to rx");
                         break;
                     }
                 }
