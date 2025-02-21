@@ -32,7 +32,7 @@ fn main() {
                 // To avoid printing messages again after sending, only displays messages if they aren't from this client.
                 let username_prefix: String = format!("{username}:");
                 if !msg_str.starts_with(&username_prefix) {
-                    println!("message recv {:?}", msg_str);
+                    println!("{}", msg_str);
                 }
             },
             Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
@@ -57,9 +57,9 @@ fn main() {
                 buff.resize(MSG_SIZE, 0);
                 if msg.contains(":user") {
                     // Client will not send whitespace/empty usernames to the server.
-                    let username: String = msg.strip_prefix(":user").unwrap().trim().to_string();
+                    let msg_username: String = msg.strip_prefix(":user").unwrap().trim().to_string();
                     // Displays help message if :user command is used incorrectly.
-                    if username.len() == 0 {
+                    if msg_username.len() == 0 {
                         println!("INVALID USE OF :user COMMAND");
                         println!("Type ':user [USERNAME]' to set your username (ex. ':user Ringo')");
                         continue
@@ -68,10 +68,11 @@ fn main() {
                 
                 client.write_all(&buff).expect("writing to socket failed");
                 if !msg.contains(":user ") {
-                    println!("message sent {:?}", msg);
+                    println!(" > sent message {:?}", msg);
                 } else {
-                    let username: String = msg.strip_prefix(":user").unwrap().trim().to_string();
-                    println!("setting username as {}", username);
+                    let msg_username: String = msg.strip_prefix(":user").unwrap().trim().to_string();
+                    username = msg_username.clone();
+                    println!(" > setting username as {}", msg_username);
                 }
             }, 
             Err(TryRecvError::Empty) => (),
