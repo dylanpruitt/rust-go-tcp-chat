@@ -9,13 +9,10 @@ import (
 
 func main() {
 
-	if len(os.Args) == 1 {
-		fmt.Println("Please provide host:port")
-		os.Exit(1)
-	}
+	const TcpAddr = "127.0.0.1:6000"
 
 	// Resolve the string address to a TCP address
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", os.Args[1])
+	tcpAddr, err := net.ResolveTCPAddr("tcp4", TcpAddr)
 
 	if err != nil {
 		fmt.Println(err)
