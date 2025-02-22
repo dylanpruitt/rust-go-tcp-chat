@@ -19,13 +19,27 @@ func main() {
 		os.Exit(1)
 	}
 
+    fmt.Print("Enter a username:");
+    reader := bufio.NewReader(os.Stdin)
+	username, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+		return
+	}
+
 	// Connect to the address with tcp
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+    // Send client username to the server
+	_, err = conn.Write([]byte(fmt.Sprintf(":user %s", username)))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+    }
 
 	// Send a message to the server
 	_, err = conn.Write([]byte("Hello TCP Server\n"))
