@@ -6,11 +6,13 @@ import (
 	"net"
 	"os"
     "strings"
+    "time"
 )
 
 func main() {
 
 	const TcpAddr = "127.0.0.1:6000"
+    clients := make([]net.Conn, 0)
 
 	// Resolve the string address to a TCP address
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", TcpAddr)
@@ -28,18 +30,43 @@ func main() {
 		os.Exit(1)
 	}
 
+    messages := make(chan string)
+
+    go func() {
+        for {
+            select {
+            case message := <-messages:
+                // Print the data read from the connection to the terminal
+                fmt.Print("> ", message)
+                for _, client := range clients {
+                    client.Write([]byte(message))
+                }
+            case <-time.After(100 * time.Millisecond):
+                // Continue to wait for messages
+                continue
+            }
+        }
+    }()
+    
 	for {
 		// Accept new connections
+        fmt.Println("block")
 		conn, err := listener.Accept()
+        fmt.Println("block2")
+        clients = append(clients, conn)
 		if err != nil {
 			fmt.Println(err)
+            continue
 		}
+        
+        fmt.Println("?")
 		// Handle new connections in a Goroutine for concurrency
-		go handleConnection(conn)
+		go handleConnection(conn, messages)
+        
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, messages chan<- string) {
 	defer conn.Close()
     username := ""
 
@@ -52,8 +79,7 @@ func handleConnection(conn net.Conn) {
 		}
 
         message := string(data)
-		// Print the data read from the connection to the terminal
-		fmt.Print("> ", message)
+		
 
         if strings.Contains(message, ":user ") {
             // user:USERNAME messages tell the server to store the client's username.
@@ -61,12 +87,10 @@ func handleConnection(conn net.Conn) {
             // TODO send welcome messsage or user change message
             clientIP := conn.RemoteAddr().String()
             username = strings.TrimSpace(strings.TrimPrefix(message, ":user "))
-            fmt.Println(clientIP, "is user", username)
-            conn.Write([]byte("Hello TCP Client\n"))
+            messages <- fmt.Sprintf("%s is user %s\n", clientIP, username)
         } else {
             // Write back the same message to the client
-            fmt.Print(username)
-            conn.Write([]byte("Hello TCP Client\n"))
+            messages <- message
         }
 	}
 }
