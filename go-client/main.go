@@ -40,6 +40,8 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
     }
+    
+    go readFromServer(conn)
 
 	// Send a message to the server
 	_, err = conn.Write([]byte("Hello TCP Server\n"))
@@ -47,14 +49,22 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+    
+    reader.ReadString('\n')
+}
 
-	// Read from the connection untill a new line is send
-	data, err := bufio.NewReader(conn).ReadString('\n')
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+func readFromServer(conn net.Conn) {
+    defer conn.Close()
 
-	// Print the data read from the connection to the terminal
-	fmt.Print("> ", string(data))
+    for {
+        // Read from the connection untill a new line is send
+        data, err := bufio.NewReader(conn).ReadString('\n')
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+
+        // Print the data read from the connection to the terminal
+        fmt.Print("> ", string(data))
+    }
 }
