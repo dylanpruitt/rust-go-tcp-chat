@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+    "strings"
 )
 
 func main() {
@@ -42,22 +43,16 @@ func main() {
     }
     
     go readFromServer(conn)
-
-	// Send a message to the server
-	_, err = conn.Write([]byte("Hello TCP Server\n"))
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
     
-    reader.ReadString('\n')
+    writeUserMessageTo(conn)
+    fmt.Println("Disconnected from server.")
 }
 
 func readFromServer(conn net.Conn) {
     defer conn.Close()
 
     for {
-        // Read from the connection untill a new line is send
+        // Read from the connection until a new line is send
         data, err := bufio.NewReader(conn).ReadString('\n')
         if err != nil {
             fmt.Println(err)
@@ -67,4 +62,25 @@ func readFromServer(conn net.Conn) {
         // Print the data read from the connection to the terminal
         fmt.Print("> ", string(data))
     }
+}
+
+func writeUserMessageTo(conn net.Conn) {
+    fmt.Println("Write a Message:")
+    reader := bufio.NewReader(os.Stdin)
+    
+    for {
+        message, err := reader.ReadString('\n')
+        if err != nil {
+            fmt.Println("Error reading input:", err)
+        }
+        
+        if strings.TrimSpace(message) == ":quit" { return }
+        // Send a message to the server
+        _, err = conn.Write([]byte(message))
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+    }
+	
 }
