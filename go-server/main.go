@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+    "strings"
 )
 
 func main() {
@@ -40,6 +41,7 @@ func main() {
 
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
+    username := ""
 
 	for {
 		// Read from the connection untill a new line is send
@@ -49,10 +51,22 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
+        message := string(data)
 		// Print the data read from the connection to the terminal
-		fmt.Print("> ", string(data))
+		fmt.Print("> ", message)
 
-		// Write back the same message to the client
-		conn.Write([]byte("Hello TCP Client\n"))
+        if strings.Contains(message, ":user ") {
+            // user:USERNAME messages tell the server to store the client's username.
+            // TODO check for oldUsername --> oldUsername := username
+            // TODO send welcome messsage or user change message
+            clientIP := conn.RemoteAddr().String()
+            username = strings.TrimSpace(strings.TrimPrefix(message, ":user "))
+            fmt.Println(clientIP, "is user", username)
+            conn.Write([]byte("Hello TCP Client\n"))
+        } else {
+            // Write back the same message to the client
+            fmt.Print(username)
+            conn.Write([]byte("Hello TCP Client\n"))
+        }
 	}
 }
