@@ -74,7 +74,17 @@ func writeUserMessageTo(conn net.Conn) {
             fmt.Println("Error reading input:", err)
         }
         
+        // If client inputs :help, quit writing to the server.
         if strings.TrimSpace(message) == ":quit" { return }
+        // If client inputs :help, print help message and do not send to the server.
+        if strings.TrimSpace(message) == ":help" {
+            fmt.Println("Chat App Commands:")
+            fmt.Println(":help - display this message")
+            fmt.Println(":user [USER] - change username")
+            fmt.Println(":quit - disconnect from server")
+            continue;
+        }
+        
         // Send a message to the server
         _, err = conn.Write([]byte(message))
         if err != nil {
