@@ -77,6 +77,7 @@ func main() {
         // If client inputs :help, quit writing to the server.
         if strings.TrimSpace(message) == ":quit" {
             close(messages)
+            fmt.Println("Disconnected from server.")
             return
         }
         // If client inputs :help, print help message and do not send to the server.
@@ -109,8 +110,6 @@ func main() {
         }
         messages <- message
     }
-    
-    fmt.Println("Disconnected from server.")
 }
 
 // Reads messages from the server until the client or server disconnect.
