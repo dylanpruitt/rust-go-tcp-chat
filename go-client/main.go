@@ -60,7 +60,7 @@ func readFromServer(conn net.Conn) {
         }
 
         // Print the data read from the connection to the terminal
-        fmt.Print("> ", string(data))
+        fmt.Print(string(data))
     }
 }
 
@@ -90,6 +90,13 @@ func writeUserMessageTo(conn net.Conn) {
         if err != nil {
             fmt.Println(err)
             return
+        } else {
+            if strings.Contains(message, ":user ") {
+                newUsername := strings.TrimSpace(strings.TrimPrefix(message, ":user "))
+                fmt.Println("> setting username as", newUsername)
+            } else {
+                fmt.Println(fmt.Sprintf("> sent message \"%s\"", strings.TrimSpace(message)))
+            }
         }
     }
 	
