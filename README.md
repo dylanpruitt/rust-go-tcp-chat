@@ -26,3 +26,8 @@ To run the Go client/server, open two terminals: one in `go-client/` and one in 
 - `:help` (**client**): prints a help message showing all valid commands.
 - `:user [NEW_USERNAME]` (**client**): sets client username to `[NEW_USERNAME]`.
 - `:quit` (**client/server**): terminates client/server connection and exits the application.
+
+### Lessons Learned
+
+I tried storing usernames in a `HashMap` globally with Rust, before realizing that was a terrible idea for concurrency (nothing I did with that ever compiled). I also attempted to make `shutdown_server` in the Rust server global too, but learned that it was far easier to handle that only in the main thread.
+Go has a built-in data race checker, which made debugging significantly easier - the repo I based the Go version off of was only setup for a single client-server connection, so most of the goroutine code in the Go version was done from scratch. I'd also never realized two separate threads were needed for handling user I/O (through stdin) and listening to the TCP connection, so that was a learning experience too.
