@@ -6,7 +6,27 @@ import (
 	"net"
 	"os"
     "strings"
+    "sync"
+    "time"
 )
+
+// Username is read/written to across multiple goroutines, so it needs a mutex.
+type Username struct {
+    mu sync.Mutex
+    v  string
+}
+
+func (u *Username) Get() string {
+    u.mu.Lock()
+    defer u.mu.Unlock()
+    return u.v
+}
+
+func (u *Username) Set(newUsername string) {
+    u.mu.Lock()
+    u.v = newUsername
+    u.mu.Unlock()
+}
 
 func main() {
 
@@ -22,11 +42,12 @@ func main() {
 
     fmt.Print("Enter a username:");
     reader := bufio.NewReader(os.Stdin)
-	username, err := reader.ReadString('\n')
+	un, err := reader.ReadString('\n')
 	if err != nil {
 		fmt.Println("Error reading input:", err)
 		return
 	}
+    username := Username{v: strings.TrimSpace(un)}
 
 	// Connect to the address with tcp
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
@@ -35,39 +56,16 @@ func main() {
 		os.Exit(1)
 	}
 
-    // Send client username to the server
-	_, err = conn.Write([]byte(fmt.Sprintf(":user %s", username)))
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-    }
-    
-    go readFromServer(conn)
-    
-    writeUserMessageTo(conn)
-    fmt.Println("Disconnected from server.")
-}
-
-func readFromServer(conn net.Conn) {
-    defer conn.Close()
-
-    for {
-        // Read from the connection until a new line is send
-        data, err := bufio.NewReader(conn).ReadString('\n')
-        if err != nil {
-            fmt.Println(err)
-            return
-        }
-
-        // Print the data read from the connection to the terminal
-        fmt.Print(string(data))
-    }
-}
-
-func writeUserMessageTo(conn net.Conn) {
     fmt.Println("Write a Message:")
-    reader := bufio.NewReader(os.Stdin)
+    messages := make(chan string)
+
+    go readFromServer(conn, &username)
+    go writeUserMessageTo(conn, messages)
     
+    // Send client username to the server
+    fmt.Println("> setting username as", username.Get())
+    messages <- fmt.Sprintf(":user %s\n", username.Get())
+
     for {
         message, err := reader.ReadString('\n')
         if err != nil {
@@ -75,7 +73,10 @@ func writeUserMessageTo(conn net.Conn) {
         }
         
         // If client inputs :help, quit writing to the server.
-        if strings.TrimSpace(message) == ":quit" { return }
+        if strings.TrimSpace(message) == ":quit" {
+            close(messages)
+            return
+        }
         // If client inputs :help, print help message and do not send to the server.
         if strings.TrimSpace(message) == ":help" {
             fmt.Println("Chat App Commands:")
@@ -86,18 +87,53 @@ func writeUserMessageTo(conn net.Conn) {
         }
         
         // Send a message to the server
-        _, err = conn.Write([]byte(message))
+        if strings.Contains(message, ":user ") {
+            newUsername := strings.TrimSpace(strings.TrimPrefix(message, ":user "))
+            username.Set(newUsername)
+            fmt.Println("> setting username as", newUsername)
+        } else {
+            fmt.Println(fmt.Sprintf("> sent message \"%s\"", strings.TrimSpace(message)))
+        }
+        messages <- message
+    }
+    
+    fmt.Println("Disconnected from server.")
+}
+
+func readFromServer(conn net.Conn, username *Username) {
+    defer conn.Close()
+
+    for {
+        // Read from the connection until a new line is send
+        data, err := bufio.NewReader(conn).ReadString('\n')
         if err != nil {
             fmt.Println(err)
             return
-        } else {
-            if strings.Contains(message, ":user ") {
-                newUsername := strings.TrimSpace(strings.TrimPrefix(message, ":user "))
-                fmt.Println("> setting username as", newUsername)
-            } else {
-                fmt.Println(fmt.Sprintf("> sent message \"%s\"", strings.TrimSpace(message)))
+        }
+
+        // To avoid printing messages again after sending, only displays messages if they aren't from this client.
+        message := string(data)
+        usernamePrefix := fmt.Sprintf("%s:", username.Get())
+        userJoinedMessage := fmt.Sprintf("%s joined the server.", username.Get())
+        if !strings.HasPrefix(message, usernamePrefix) && message != userJoinedMessage {
+            fmt.Print(message)
+        } 
+    }
+}
+
+func writeUserMessageTo(conn net.Conn, messages <-chan string) {
+    for {
+        select {
+        case message := <-messages:
+            // Send a message to the server
+            _, err := conn.Write([]byte(message))
+            if err != nil {
+                fmt.Println(err)
+                return
             }
+        case <-time.After(100 * time.Millisecond):
+            // Continue to wait for messages
+            continue
         }
     }
-	
 }
