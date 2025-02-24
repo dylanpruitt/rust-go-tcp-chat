@@ -83,11 +83,17 @@ func handleConnection(conn net.Conn, messages chan<- string) {
 
         if strings.Contains(message, ":user ") {
             // user:USERNAME messages tell the server to store the client's username.
-            // TODO check for oldUsername --> oldUsername := username
-            // TODO send welcome messsage or user change message
             clientIP := conn.RemoteAddr().String()
+            oldUsername := username
             username = strings.TrimSpace(strings.TrimPrefix(message, ":user "))
-            messages <- fmt.Sprintf("%s is user %s\n", clientIP, username)
+            fmt.Println(clientIP, "is user", username)
+            if oldUsername != "" {
+                // If not the client initially setting their username, send a message with updated username.
+                messages <- fmt.Sprintf("%s changed username to %s\n", oldUsername, username)
+            } else {
+                // Sends a message for client initially connecting.
+                messages <- fmt.Sprintf("%s joined the server\n", username)
+            }
         } else {
             // Write back the same message to the client
             messages <- message
