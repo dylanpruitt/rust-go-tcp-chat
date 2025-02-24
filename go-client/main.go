@@ -104,9 +104,9 @@ func main() {
         if strings.Contains(message, ":user ") {
             newUsername := strings.TrimSpace(strings.TrimPrefix(message, ":user "))
             username.Set(newUsername)
-            fmt.Println("> setting username as", newUsername)
+            fmt.Println(" > setting username as", newUsername)
         } else {
-            fmt.Println(fmt.Sprintf("> sent message \"%s\"", strings.TrimSpace(message)))
+            fmt.Println(fmt.Sprintf(" > sent message \"%s\"", strings.TrimSpace(message)))
         }
         messages <- message
     }

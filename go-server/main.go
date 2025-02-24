@@ -70,8 +70,11 @@ func main() {
                 
             select {
             case message := <-messages:
-                // Print the data read from the connection to the terminal
-                fmt.Print("> ", message)
+                // Print the message to the terminal, unless it's a message from the server.
+                // This is hacky, but I did it so that print output on the Go side would match the Rust version.
+                if !strings.Contains(message, "changed username to") && !strings.Contains(message, " disconnected.") {
+                    fmt.Print(message)
+                }
                 for _, client := range clients {
                     client.Write([]byte(message))
                 }
@@ -138,7 +141,7 @@ func handleConnection(conn net.Conn, messages chan<- string) {
             clientIP := conn.RemoteAddr().String()
             oldUsername := username
             username = strings.TrimSpace(strings.TrimPrefix(message, ":user "))
-            fmt.Println(clientIP, "is user", username)
+            fmt.Println(fmt.Sprintf("%s is user \"%s\"", clientIP, username))
             if oldUsername != "" {
                 // If not the client initially setting their username, send a message with updated username.
                 messages <- fmt.Sprintf("%s changed username to %s\n", oldUsername, username)
@@ -147,9 +150,8 @@ func handleConnection(conn net.Conn, messages chan<- string) {
                 messages <- fmt.Sprintf("%s joined the server\n", username)
             }
         } else {
-            // Print client message and who sent it.
+            // Send client message with username.
             messageWithSender := fmt.Sprintf("%s: %s", username, message)
-            fmt.Println(messageWithSender)
             messages <- messageWithSender
         }
     }
