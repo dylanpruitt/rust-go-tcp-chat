@@ -124,6 +124,7 @@ func handleConnection(conn net.Conn, messages chan<- string) {
 		data, err := bufio.NewReader(conn).ReadString('\n')
 		if err != nil {
             fmt.Println(fmt.Sprintf("closing connection with %s (%s)", username, conn.RemoteAddr().String()))
+            messages <- fmt.Sprintf("%s disconnected.\n", username)
 			return
 		}
 
