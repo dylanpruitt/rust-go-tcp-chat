@@ -95,8 +95,10 @@ func handleConnection(conn net.Conn, messages chan<- string) {
                 messages <- fmt.Sprintf("%s joined the server\n", username)
             }
         } else {
-            // Write back the same message to the client
-            messages <- message
+            // Print client message and who sent it.
+            messageWithSender := fmt.Sprintf("%s: %s", username, message)
+            fmt.Println(messageWithSender)
+            messages <- messageWithSender
         }
 	}
 }
