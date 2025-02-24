@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
-	"net"
-	"os"
+    "bufio"
+    "fmt"
+    "net"
+    "os"
     "strings"
     "sync"
     "time"
@@ -32,30 +32,30 @@ func main() {
 
     const TcpAddr = "127.0.0.1:6000"
 
-	// Resolve the string address to a TCP address
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", TcpAddr)
+    // Resolve the string address to a TCP address
+    tcpAddr, err := net.ResolveTCPAddr("tcp4", TcpAddr)
 
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
 
     // Get client username from stdin
     fmt.Print("Enter a username:");
     reader := bufio.NewReader(os.Stdin)
-	un, err := reader.ReadString('\n')
-	if err != nil {
-		fmt.Println("Error reading input:", err)
-		return
-	}
+    un, err := reader.ReadString('\n')
+    if err != nil {
+        fmt.Println("Error reading input:", err)
+        return
+    }
     username := Username{v: strings.TrimSpace(un)}
 
-	// Connect to the address with tcp
-	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+    // Connect to the address with tcp
+    conn, err := net.DialTCP("tcp", nil, tcpAddr)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
 
     fmt.Println("Write a Message:")
     messages := make(chan string)

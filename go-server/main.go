@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
-	"net"
-	"os"
+    "bufio"
+    "fmt"
+    "net"
+    "os"
     "strings"
     "sync"
     "time"
@@ -38,24 +38,24 @@ func (u *Server) Shutdown() {
 
 func main() {
 
-	const TcpAddr = "127.0.0.1:6000"
+    const TcpAddr = "127.0.0.1:6000"
     clients := make([]net.Conn, 0)
 
-	// Resolve the string address to a TCP address
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", TcpAddr)
+    // Resolve the string address to a TCP address
+    tcpAddr, err := net.ResolveTCPAddr("tcp4", TcpAddr)
 
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
 
-	// Start listening for TCP connections on the given address
-	listener, err := net.ListenTCP("tcp", tcpAddr)
+    // Start listening for TCP connections on the given address
+    listener, err := net.ListenTCP("tcp", tcpAddr)
 
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
 
     // Server uses a channel to communicate messages between goroutines
     messages := make(chan string)
@@ -103,35 +103,35 @@ func main() {
     }()
     
     // Loops to check for new connections, spawning a goroutine to handle each client connection for each one that joins.
-	for {
-		// Accept new connections
-		conn, err := server.Listener().Accept()
+    for {
+        // Accept new connections
+        conn, err := server.Listener().Accept()
         clients = append(clients, conn)
-		if err != nil {
-			fmt.Println(err)
+        if err != nil {
+            fmt.Println(err)
             return
-		}
+        }
 
-		// Handle new connections in a Goroutine for concurrency
-		go handleConnection(conn, messages)
-	}
+        // Handle new connections in a Goroutine for concurrency
+        go handleConnection(conn, messages)
+    }
 }
 
 func handleConnection(conn net.Conn, messages chan<- string) {
-	defer conn.Close()
+    defer conn.Close()
     username := ""
 
-	for {
-		// Read from the connection untill a new line is send
-		data, err := bufio.NewReader(conn).ReadString('\n')
-		if err != nil {
+    for {
+        // Read from the connection untill a new line is send
+        data, err := bufio.NewReader(conn).ReadString('\n')
+        if err != nil {
             fmt.Println(fmt.Sprintf("closing connection with %s (%s)", username, conn.RemoteAddr().String()))
             messages <- fmt.Sprintf("%s disconnected.\n", username)
-			return
-		}
+            return
+        }
 
         message := string(data)
-		
+        
 
         if strings.Contains(message, ":user ") {
             // user:USERNAME messages tell the server to store the client's username.
@@ -152,5 +152,5 @@ func handleConnection(conn net.Conn, messages chan<- string) {
             fmt.Println(messageWithSender)
             messages <- messageWithSender
         }
-	}
+    }
 }
