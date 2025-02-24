@@ -40,6 +40,7 @@ func main() {
 		os.Exit(1)
 	}
 
+    // Get client username from stdin
     fmt.Print("Enter a username:");
     reader := bufio.NewReader(os.Stdin)
 	un, err := reader.ReadString('\n')
@@ -66,6 +67,7 @@ func main() {
     fmt.Println("> setting username as", username.Get())
     messages <- fmt.Sprintf(":user %s\n", username.Get())
 
+    // Loops reading client input until :quit is entered.
     for {
         message, err := reader.ReadString('\n')
         if err != nil {
@@ -111,6 +113,7 @@ func main() {
     fmt.Println("Disconnected from server.")
 }
 
+// Reads messages from the server until the client or server disconnect.
 func readFromServer(conn net.Conn, username *Username) {
     defer conn.Close()
 
@@ -132,6 +135,7 @@ func readFromServer(conn net.Conn, username *Username) {
     }
 }
 
+// Writes messages to the server, if there is one sent through the messages channel.
 func writeUserMessageTo(conn net.Conn, messages <-chan string) {
     for {
         select {

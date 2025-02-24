@@ -10,7 +10,7 @@ import (
     "time"
 )
 
-// Listener/shutdown are read/written to across multiple goroutines, so they needs a mutex.
+// Listener/shutdown are read/written to across multiple goroutines, so they need a mutex.
 type Server struct {
     mu sync.Mutex
     l *net.TCPListener // tcp listener
@@ -57,13 +57,14 @@ func main() {
 		os.Exit(1)
 	}
 
+    // Server uses a channel to communicate messages between goroutines
     messages := make(chan string)
     server := Server{l:listener, s: false}
 
+    // Spawns a goroutine responsible for writing messages to all clients when they are received.
     go func() {
         for {
             if server.IsShutdown() {
-                fmt.Println("LISTEN THREAD DOWN")
                 return
             }
                 
@@ -81,6 +82,7 @@ func main() {
         }
     }()
 
+    // Spawns a goroutine to read user input from stdin.
     go func() {
         reader := bufio.NewReader(os.Stdin)
 
@@ -90,7 +92,7 @@ func main() {
                 fmt.Println("Error reading input:", err)
             }
             
-            // If user inputs :quit, quit writing to the server.
+            // If user inputs :quit, quit writing to the server and shutdown.
             if strings.TrimSpace(message) == ":quit" {
                 server.Shutdown()
                 return
@@ -100,6 +102,7 @@ func main() {
         }
     }()
     
+    // Loops to check for new connections, spawning a goroutine to handle each client connection for each one that joins.
 	for {
 		// Accept new connections
 		conn, err := server.Listener().Accept()
@@ -111,7 +114,6 @@ func main() {
 
 		// Handle new connections in a Goroutine for concurrency
 		go handleConnection(conn, messages)
-        
 	}
 }
 
