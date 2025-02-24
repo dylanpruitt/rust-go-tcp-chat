@@ -6,8 +6,35 @@ import (
 	"net"
 	"os"
     "strings"
+    "sync"
     "time"
 )
+
+// Listener/shutdown are read/written to across multiple goroutines, so they needs a mutex.
+type Server struct {
+    mu sync.Mutex
+    l *net.TCPListener // tcp listener
+    s  bool        // flag to shutdown server
+}
+
+func (u *Server) Listener() *net.TCPListener {
+    u.mu.Lock()
+    defer u.mu.Unlock()
+    return u.l
+}
+
+func (u *Server) IsShutdown() bool {
+    u.mu.Lock()
+    defer u.mu.Unlock()
+    return u.s
+}
+
+func (u *Server) Shutdown() {
+    u.mu.Lock()
+    u.s = true
+    u.l.Close()
+    u.mu.Unlock()
+}
 
 func main() {
 
@@ -31,9 +58,15 @@ func main() {
 	}
 
     messages := make(chan string)
+    server := Server{l:listener, s: false}
 
     go func() {
         for {
+            if server.IsShutdown() {
+                fmt.Println("LISTEN THREAD DOWN")
+                return
+            }
+                
             select {
             case message := <-messages:
                 // Print the data read from the connection to the terminal
@@ -47,19 +80,35 @@ func main() {
             }
         }
     }()
+
+    go func() {
+        reader := bufio.NewReader(os.Stdin)
+
+        for {
+            message, err := reader.ReadString('\n')
+            if err != nil {
+                fmt.Println("Error reading input:", err)
+            }
+            
+            // If user inputs :quit, quit writing to the server.
+            if strings.TrimSpace(message) == ":quit" {
+                server.Shutdown()
+                return
+            }
+
+            messages <- message
+        }
+    }()
     
 	for {
 		// Accept new connections
-        fmt.Println("block")
-		conn, err := listener.Accept()
-        fmt.Println("block2")
+		conn, err := server.Listener().Accept()
         clients = append(clients, conn)
 		if err != nil {
 			fmt.Println(err)
-            continue
+            return
 		}
-        
-        fmt.Println("?")
+
 		// Handle new connections in a Goroutine for concurrency
 		go handleConnection(conn, messages)
         
