@@ -13,7 +13,7 @@ The server creates a TCP listener for clients to connect to, and spawns a separa
 **Rust Client**  
 Gets client username from stdin, and starts a nonblocking connection to the server. Spawns a separate thread to listen for messages sent from the server; the main thread reads user messages from stdin to send to the server until the user inputs `:quit`.  
 
-**Go Server/Client**
+**Go Server/Client**  
 The Go implementation is mostly the same, with two major exceptions: Go's `TCPListener.Accept()` function is blocking, so I had to make another separate goroutine to write messages to clients, and I use mutexes to manage shared state in both the server and the client.
 
 ### Run Instructions
