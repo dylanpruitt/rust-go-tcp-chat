@@ -85,6 +85,17 @@ func main() {
             fmt.Println(":quit - disconnect from server")
             continue;
         }
+
+        if strings.Contains(message, ":user") {
+            // Client will not send whitespace/empty usernames to the server.
+            messageUsername := strings.TrimSpace(strings.TrimPrefix(message, ":user"))
+            // Displays help message if :user command is used incorrectly.
+            if messageUsername == "" {
+                fmt.Println("INVALID USE OF :user COMMAND");
+                fmt.Println("Type ':user [USERNAME]' to set your username (ex. ':user Ringo')");
+                continue
+            }
+        }
         
         // Send a message to the server
         if strings.Contains(message, ":user ") {
