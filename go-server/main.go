@@ -123,7 +123,7 @@ func handleConnection(conn net.Conn, messages chan<- string) {
 		// Read from the connection untill a new line is send
 		data, err := bufio.NewReader(conn).ReadString('\n')
 		if err != nil {
-			fmt.Println(err)
+            fmt.Println(fmt.Sprintf("closing connection with %s (%s)", username, conn.RemoteAddr().String()))
 			return
 		}
 
